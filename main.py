@@ -93,6 +93,6 @@ while(True):
             large_text=country_tag, large_image=f"{country_tag.lower()}",
             start=startepoch)
         flag = False
-        print("Updated presence succesfully",country_tag.lower(),counter)
-    print("Checking for changes...",ismultiplayer,country_name,isrev)
+        print("Updated presence succesfully")
+    print("Checking for changes...")
     time.sleep(20)
