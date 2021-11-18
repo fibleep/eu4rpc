@@ -1,6 +1,5 @@
 from pypresence import Presence
 import time, os, psutil
-import re
 for proc in psutil.process_iter():
     if proc.name() == "eu4.exe":
         print("EU4 detected with pid: " + str(proc.pid))
@@ -26,6 +25,7 @@ try:
 except:
     print('Error! No save files found')
     savefile_name = 'no saves found'
+counter=0
 while(True):
     for sav in save_list:
         date = os.stat(savefile_path + sav)
@@ -37,41 +37,62 @@ while(True):
             date_max=date.st_mtime
 
     print("Using data from:", savefile_name)
-    try:
-        if(flag):
-            print("Changes found, updating...")
-            i=1
-            f=open(savefile_path + savefile_name,"r")
-            contents = f.read()
-            f.close()
-            listconts = contents.split()
-            x = listconts.index("EU4txt")
-            country_name = listconts[x + 4][24:len(listconts[x + 4])-1]
-            country_tag=listconts[x+3][8:-1]
-            current_month = months[int(float(listconts[x + 1][10:][:-1][:-1]))-1]
-            current_year = listconts[x + 1][5:9]
-            country_rank_num = listconts[listconts.index("human=yes") + 3][16:]
-            if(int(country_rank_num) == 1):
-                country_rank = "Duchy"
-            elif(int(country_rank_num) == 2):
-                country_rank = "Kingdom"
-            else:
-                country_rank = "Empire"
-            RPC.update(state=f"{current_month} {current_year}",
-            details=f"{country_rank} of {country_name}",
-            large_text=country_name, large_image=f"{country_tag.lower()}",
+    if(flag):
+        print("Changes found, updating...")
+        i=1
+        f=open(savefile_path + savefile_name,"r")
+        contents = f.read()
+        f.close()
+        listconts = contents.split()
+        listconts2 = contents.splitlines()
+        ismultiplayer=1
+        try:
+            listconts.index("multiplayer=yes")
+        except:
+            ismultiplayer=0
+        x = listconts.index("EU4txt")
+        country_name = listconts2[x + 4][24:-1]
+        country_name_rev=listconts2[x + 12][24:-1]
+        country_tag=listconts[x+3][8:-1]
+        current_month = months[int(float(listconts[x + 1][10:][:-1][:-1]))-1]
+        current_year = listconts[x + 1][5:9]
+        country_rank_num = listconts[listconts.index("human=yes") + 3][16:]
+
+        if(ismultiplayer==1):
+            state="Multiplayer"
+        else:
+            state="Singleplayer"
+
+        if(int(country_rank_num) == 1):
+            country_rank = "Duchy"
+        elif(int(country_rank_num) == 2):
+            country_rank = "Kingdom"
+        else:
+            country_rank = "Empire"
+
+        statevar="deadass"
+
+        if ('Revolutionary' in listconts2[x + 12][24:-1]):
+            isrev=1
+        else:
+            isrev=0
+        if isrev==1:
+            deetsvar=f"{country_name_rev}"
+        if isrev==0:
+            deetsvar=f"{country_rank} of {country_name}"
+
+        if counter==0:
+            statevar=f"{current_month} of {current_year}"
+            counter=counter+1
+        else:
+            statevar=f"Playing in {state}"
+            counter=0  
+
+        RPC.update(state=f"{statevar}",
+            details=deetsvar,
+            large_text=country_tag, large_image=f"{country_tag.lower()}",
             start=startepoch)
-            flag = False
-            print("Updated presence succesfully",country_tag.lower())
-    except:
-        print("Save is ironman")
-        RPC.update(state="something",
-        details="Playing in ironman",
-        large_text="IRONMAN", large_image="bur",
-        start=startepoch)
         flag = False
-        print("Updated presence succesfully")
-
-
-    print("Checking for changes...")
+        print("Updated presence succesfully",country_tag.lower(),counter)
+    print("Checking for changes...",ismultiplayer,country_name,isrev)
     time.sleep(20)
